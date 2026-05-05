@@ -16,5 +16,8 @@ dependencies = [
 [project.scripts]
 kbimporter = "kbimporter.cli:main"
 
+[project.optional-dependencies]
+dev = ["pytest>=9.0"]
+
 [tool.ruff]
 line-length = 100
