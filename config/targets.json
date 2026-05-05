@@ -1,0 +1,63 @@
+{
+  "ai_link": {
+    "database_id": "2de98037-36ed-8075-9adc-e123a3fa684c",
+    "status": "Inbox"
+  },
+  "database_overrides": {
+    "26298037-36ed-80f3-94e2-f1b4afe77dbd": {
+      "properties": {
+        "title": "文档名称",
+        "source_created_at": "日期"
+      }
+    },
+    "2de98037-36ed-8075-9adc-e123a3fa684c": {
+      "properties": {
+        "title": "名称",
+        "source_id": "Source",
+        "status": "Status",
+        "tags": "Topics",
+        "source_created_at": "Date"
+      }
+    },
+    "26098037-36ed-80a1-b316-d6094e4dad56": {
+      "properties": {
+        "title": "名称",
+        "source_created_at": "文档日期"
+      }
+    }
+  },
+  "notion_databases": [
+    {
+      "id": "33a98037-36ed-806b-afa8-fe1c402ae698",
+      "title": "AI项目文档"
+    },
+    {
+      "id": "26298037-36ed-80f3-94e2-f1b4afe77dbd",
+      "title": "番禺二级医院项目"
+    },
+    {
+      "id": "26098037-36ed-80a1-b316-d6094e4dad56",
+      "title": "荔湾中心医院两院融合"
+    },
+    {
+      "id": "2de98037-36ed-804f-8689-d2aa888dabc8",
+      "title": "Project Database"
+    },
+    {
+      "id": "93e26b7c-5d64-48dd-aa86-cdbf7838bb95",
+      "title": "草稿库"
+    },
+    {
+      "id": "2e7ed6df-8d41-4a5e-934e-8722030c62fb",
+      "title": "主题聚合"
+    },
+    {
+      "id": "2dd98037-36ed-80d4-bb6c-f20a08f48999",
+      "title": "Area-Database"
+    },
+    {
+      "id": "2de98037-36ed-8023-83d8-c0eb8aa18e9f",
+      "title": "读书笔记"
+    }
+  ]
+}
