@@ -292,7 +292,7 @@ class NotionImportWriter:
             return ""
 
         properties = _build_properties(schema, mapping, note, status=status)
-        body = note.web_page_content() or note.content
+        body = note.content or note.web_page_content()
         children = markdown_to_blocks(body) or [_paragraph_block("(empty)")]
 
         return _create_page(self._client, db_id, ds_id, properties, children)
