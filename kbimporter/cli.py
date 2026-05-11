@@ -245,7 +245,8 @@ def cmd_audio(args: argparse.Namespace) -> int:
         if not available_dbs:
             print("[warn] 未找到可用的目标数据库，请检查 Notion Integration 权限。", file=sys.stderr)
     except RuntimeError as e:
-        print(f"[warn] {e}，录音卡笔记将无法写入 Notion。", file=sys.stderr)
+        print(f"[error] {e}，无法初始化 Notion 写入器，中止。", file=sys.stderr)
+        return 1
 
     sess = requests.Session()
 

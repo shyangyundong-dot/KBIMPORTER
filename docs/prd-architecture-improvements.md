@@ -71,6 +71,19 @@ There are currently no test files in the codebase, so any new tests will establi
 - Automatic scheduling or notification for `sync` failures.
 - Any UI beyond the existing CLI.
 
+## Implementation Status
+
+Last updated: 2026-05-11
+
+| # | Implementation Decision | Status | Notes |
+|---|------------------------|--------|-------|
+| 1 | NoteRouter — topic-level exclusion via `exclude_topics` constructor param | ✅ Done | `cli.py` injects `_recipe_topics` into both `cmd_sync` and `cmd_audio` |
+| 2 | NoteRouter — lenient fallback + end-of-run unmatched warning | ✅ Done | Both `cmd_sync` and `cmd_audio` collect `unmatched_*` list and print warning |
+| 3 | `iter_import_notes` — server-side watermark filtering | ✅ Done | `watermark=watermark` passed; `iter_raw_notes` uses `start_since_id` |
+| 4 | `cmd_audio` — single DB fetch at startup, fail-fast if unavailable | ✅ Done | DB list fetched once; on fetch failure prints `[error]` and returns 1 |
+| 5 | `NotionImportWriter` — explicit source_id warning | ✅ Done | `[info]` printed when `source_id` prop absent; seen in both `write_ai_link` and `write_audio_card` |
+
+
 ## Further Notes
 
 - `CONTEXT.md` was created at the project root during this session, capturing the domain glossary and key relationships between the three note types and two commands.
