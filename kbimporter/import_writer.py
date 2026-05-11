@@ -267,11 +267,16 @@ class NotionImportWriter:
             result.append({"id": str(item["id"]), "title": title})
         return result
 
-    def has_source_id(self, database_id: str, prop_name: str, source_id: str) -> bool:
-        resp = self._client.databases.query(
-            database_id=database_id,
-            filter={"property": prop_name, "rich_text": {"equals": source_id}},
-        )
+    def has_source_id(self, database_id: str, prop_name: str, source_id: str, data_source_id: str | None = None) -> bool:
+        flt = {"property": prop_name, "rich_text": {"equals": source_id}}
+        if data_source_id:
+            resp = self._client.data_sources.query(data_source_id, filter=flt, page_size=1)
+        else:
+            resp = self._client.request(
+                path=f"databases/{database_id}/query",
+                method="POST",
+                body={"filter": flt, "page_size": 1},
+            )
         return bool(resp.get("results"))
 
     def write_ai_link(self, note: GetNote, targets_config: dict[str, Any]) -> str:
@@ -288,7 +293,7 @@ class NotionImportWriter:
         if not source_id_prop:
             import sys
             print(f"[info] AI链接数据库无 source_id 字段，依赖水位文件去重（db={db_id}）", file=sys.stderr)
-        elif self.has_source_id(db_id, source_id_prop, note.note_id):
+        elif self.has_source_id(db_id, source_id_prop, note.note_id, ds_id):
             return ""
 
         properties = _build_properties(schema, mapping, note, status=status)
@@ -313,7 +318,7 @@ class NotionImportWriter:
         if not source_id_prop:
             import sys
             print(f"[info] 录音卡目标数据库无 source_id 字段，依赖水位文件去重（db={database_id}）", file=sys.stderr)
-        elif self.has_source_id(database_id, source_id_prop, note.note_id):
+        elif self.has_source_id(database_id, source_id_prop, note.note_id, ds_id):
             return ""
 
         properties = _build_properties(schema, mapping, note, status=None)
