@@ -57,6 +57,13 @@ class WatermarkStore:
         note_created = note.created_datetime
         watermark_created = parse_datetime(state.last_created_at)
         if note_created < watermark_created:
+            # IDs can be non-monotonic: a note may have a higher ID but older
+            # created_at. Don't skip it if we haven't seen it yet.
+            try:
+                if state.last_note_id and int(note.note_id) > int(state.last_note_id):
+                    return note.note_id in set(state.processed_ids or [])
+            except (ValueError, TypeError):
+                pass
             return True
         if note_created == watermark_created:
             return note.note_id in set(state.processed_ids or [])

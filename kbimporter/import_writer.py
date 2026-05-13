@@ -172,7 +172,8 @@ def _property_value(schema: dict[str, Any], value: Any) -> dict[str, Any]:
     if prop_type == "status":
         return {"status": {"name": str(value)}}
     if prop_type == "select":
-        return {"select": {"name": str(value)}}
+        v = value[0] if isinstance(value, list) and value else value
+        return {"select": {"name": str(v)}}
     if prop_type == "multi_select":
         values = value if isinstance(value, list) else [value]
         return {"multi_select": [{"name": str(item)} for item in values]}

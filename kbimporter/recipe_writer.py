@@ -17,9 +17,23 @@ def resolve_notion_database_context(
 ) -> tuple[dict[str, Any], str | None, dict[str, Any]]:
     """读取数据库列定义，兼容 Notion 新版 data_sources。
 
+    database_id 可以是传统 database ID，也可以是 data_source ID（Notion v3
+    search API 现在只返回 data_source 类型）。当传入 data_source ID 时，
+    返回的 data_source_id == database_id，下游 has_source_id / _create_page
+    会自动走 data_source 路径。
+
     返回 (properties 映射, data_source_id, database_raw)。
     """
-    db = client.databases.retrieve(database_id=database_id)
+    from notion_client.errors import APIResponseError
+
+    try:
+        db = client.databases.retrieve(database_id=database_id)
+    except APIResponseError:
+        # database_id 实际上是 data_source_id（Notion v3 search 返回的类型）
+        ds = client.data_sources.retrieve(data_source_id=database_id)
+        schema = dict(ds.get("properties") or {})
+        return schema, database_id, ds
+
     ds_id = _first_data_source_id(db.get("data_sources"))
 
     raw = db.get("properties")

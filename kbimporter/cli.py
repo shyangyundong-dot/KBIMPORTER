@@ -250,6 +250,7 @@ def cmd_audio(args: argparse.Namespace) -> int:
 
     sess = requests.Session()
 
+    bcfg = None
     if args.fixture:
         notes_iter = load_fixture_notes(args.fixture)
     else:
@@ -279,7 +280,25 @@ def cmd_audio(args: argparse.Namespace) -> int:
             continue
 
         n_processed += 1
-        _process_audio_card(note, writer, available_dbs, targets_config, correction_dict_path, watermark)
+        database_id = _process_audio_card(note, writer, available_dbs, targets_config, correction_dict_path, watermark)
+
+        # 处理追加笔记（子笔记），不走 vim 编辑，直接写入同一数据库
+        if database_id and writer and bcfg:
+            children_ids = [str(cid) for cid in (note.raw.get("children_ids") or [])]
+            if children_ids:
+                print(f"  正在处理 {len(children_ids)} 条追加笔记…")
+                for child_id in children_ids:
+                    try:
+                        child_detail = fetch_note_detail(
+                            sess,
+                            api_key=bcfg.api_key,
+                            client_id=bcfg.client_id,
+                            note_id=child_id,
+                        )
+                        child_note = GetNote.from_api_note(child_detail)
+                        _process_child_note(child_note, writer, database_id, targets_config)
+                    except Exception as exc:
+                        print(f"    [子笔记] {child_id} 获取失败：{exc}")
 
     if n_processed == 0:
         print("没有待处理的录音卡笔记。")
@@ -325,7 +344,8 @@ def _process_audio_card(
     targets_config: dict[str, Any],
     correction_dict_path: Path,
     watermark: WatermarkStore,
-) -> None:
+) -> str | None:
+    """处理录音卡笔记，返回写入的 database_id（供调用方处理子笔记），跳过时返回 None。"""
     print(f"\n[录音卡] {note.note_id}「{note.title}」")
 
     # 1. 本地字典清洗
@@ -346,10 +366,10 @@ def _process_audio_card(
     editor = os.environ.get("EDITOR", "vi")
     try:
         subprocess.run([editor, str(tmp_path)], check=True)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, subprocess.CalledProcessError):
         tmp_path.unlink(missing_ok=True)
         print("  已中断，跳过此笔记。")
-        return
+        return None
 
     # 3. 读回编辑后内容
     edited_content = _read_review_file(tmp_path)
@@ -369,12 +389,12 @@ def _process_audio_card(
     # 5. 选择目标数据库
     if writer is None:
         print("  跳过写入（未配置 NOTION_API_KEY）。")
-        return
+        return None
 
     database_id = _select_audio_database(available_dbs)
     if database_id is None:
         print("  已跳过写入。")
-        return
+        return None
 
     # 6. 构建清洗记录
     cleaning_log = _format_cleaning_log(clean_result)
@@ -391,6 +411,27 @@ def _process_audio_card(
     except Exception as exc:
         _save_failed(note, str(exc))
         print(f"  写入失败：{exc}")
+
+    return database_id
+
+
+def _process_child_note(
+    child: GetNote,
+    writer: NotionImportWriter,
+    database_id: str,
+    targets_config: dict[str, Any],
+) -> None:
+    """将子笔记（追加笔记）直接写入 Notion，不走 vim 编辑和纠错流程。"""
+    print(f"    [子笔记] {child.note_id}「{child.title}」", end=" ", flush=True)
+    try:
+        page_id = writer.write_audio_card(child, database_id, child.content, "", targets_config)
+        if page_id == "":
+            print("已跳过（重复）")
+        else:
+            print(f"已写入 {page_id}")
+    except Exception as exc:
+        _save_failed(child, str(exc))
+        print(f"写入失败：{exc}")
 
 
 def _write_review_file(path: Path, note: GetNote, clean_result: Any) -> None:
