@@ -258,10 +258,10 @@ class NotionImportWriter:
 
     def list_databases(self) -> list[dict[str, str]]:
         """列出 Integration 有权访问的所有数据库。"""
-        resp = self._client.search(filter={"property": "object", "value": "database"})
+        resp = self._client.search(filter={"property": "object", "value": "data_source"})
         result = []
         for item in resp.get("results") or []:
-            if item.get("object") != "database":
+            if item.get("object") not in ("database", "data_source"):
                 continue
             title = "".join(p.get("plain_text", "") for p in item.get("title") or [])
             result.append({"id": str(item["id"]), "title": title})
